@@ -1,2 +1,3 @@
 # LearningOpenGL
-Learning OpenGL with c++
+---
+Small project to learn OpenGl :D
