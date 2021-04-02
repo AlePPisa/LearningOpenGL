@@ -1,3 +1,3 @@
 # LearningOpenGL
 ---
-Small project to learn OpenGl :D
+Small project to learn OpenGL :D
