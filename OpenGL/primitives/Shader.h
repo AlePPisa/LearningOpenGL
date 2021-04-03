@@ -17,13 +17,15 @@ public:
 
     explicit Shader(const char* shaderPath);
 
-    void use();
+    virtual ~Shader();
 
-    void setUniformFloat(const char* uniformName, float value);
+    void use() const;
 
-    void setUniformInt(const char* uniformName, int value);
+    void setUniformFloat(const char* uniformName, float value) const;
 
-    void setUNiformBool(const char* uniformName, bool value);
+    void setUniformInt(const char* uniformName, int value) const;
+
+    void setUNiformBool(const char* uniformName, bool value) const;
 
 private:
     struct ShaderSourceCode {
@@ -37,7 +39,7 @@ private:
         FRAGMENT = 1
     };
 
-    ShaderSourceCode parseShader(const char* shaderPath);
+    static ShaderSourceCode parseShader(const char* shaderPath);
 
     void compileShader(ShaderSourceCode &source);
 };

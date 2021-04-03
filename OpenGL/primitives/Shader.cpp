@@ -9,8 +9,8 @@ Shader::Shader(const char* shaderPath){
     compileShader(source);
 }
 
-void Shader::use() {
-    glUseProgram(ID);
+Shader::~Shader() {
+    glDeleteProgram(ID);
 }
 
 Shader::ShaderSourceCode Shader::parseShader(const char *shaderPath) {
@@ -54,7 +54,7 @@ void Shader::compileShader(Shader::ShaderSourceCode &source) {
     glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
     if(!success)
     {
-        glGetShaderInfoLog(vertex, 512, NULL, infoLog);
+        glGetShaderInfoLog(vertex, 512, nullptr, infoLog);
         std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
     };
 
@@ -68,7 +68,7 @@ void Shader::compileShader(Shader::ShaderSourceCode &source) {
     glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
     if(!success)
     {
-        glGetShaderInfoLog(vertex, 512, NULL, infoLog);
+        glGetShaderInfoLog(vertex, 512, nullptr, infoLog);
         std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
     };
 
@@ -82,7 +82,7 @@ void Shader::compileShader(Shader::ShaderSourceCode &source) {
     glGetProgramiv(ID, GL_LINK_STATUS, &success);
     if(!success)
     {
-        glGetProgramInfoLog(ID, 512, NULL, infoLog);
+        glGetProgramInfoLog(ID, 512, nullptr, infoLog);
         std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
     }
 
@@ -90,14 +90,19 @@ void Shader::compileShader(Shader::ShaderSourceCode &source) {
     glDeleteShader(fragment);
 }
 
-void Shader::setUniformFloat(const char *uniformName, float value) {
+// Public Methods
+void Shader::setUniformFloat(const char *uniformName, float value) const {
     glUniform1f(glGetUniformLocation(ID, uniformName), value);
 }
 
-void Shader::setUniformInt(const char *uniformName, int value) {
+void Shader::setUniformInt(const char *uniformName, int value) const {
     glUniform1i(glGetUniformLocation(ID, uniformName), value);
 }
 
-void Shader::setUNiformBool(const char *uniformName, bool value) {
+void Shader::setUNiformBool(const char *uniformName, bool value) const {
     glUniform1i(glGetUniformLocation(ID, uniformName), (int)value);
+}
+
+void Shader::use() const {
+    glUseProgram(ID);
 }

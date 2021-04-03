@@ -1,16 +1,26 @@
 #shader vertex
 #version 330 core
 layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec3 aColor;
+
+out vec3 ourColor;
+
+uniform float dx;
+uniform float dy;
+
 void main()
 {
-   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+    vec3 pos = vec3(aPos.x + dx, aPos.y + dy, aPos.z);
+    gl_Position = vec4(pos, 1.0);
+    ourColor = pos;
 }
 
 #shader fragment
 #version 330 core
 out vec4 FragColor;
+in vec3 ourColor;
 
 void main()
 {
-    FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
+    FragColor = vec4(ourColor, 1.0);
 }

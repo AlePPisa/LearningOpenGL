@@ -7,22 +7,6 @@
 const int windowWidth = 800;
 const int windowHeight = 600;
 
-//Constants with the vertex shader, should have a better system latter on
-const char* vertexShaderSource = "#version 330 core\n"
-                                 "layout (location = 0) in vec3 aPos;\n"
-                                 "void main()\n"
-                                 "{\n"
-                                 "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-                                 "}\0";
-
-const char* fragmentShaderSource = "#version 330 core\n"
-                                   "out vec4 FragColor;\n"
-                                   "\n"
-                                   "void main()\n"
-                                   "{\n"
-                                   "    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-                                   "}\0 ";
-
 // This method allows for GLFW to resize the window whenever the user drags the corners
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height); // Set viewport again
@@ -75,62 +59,6 @@ int main() {
     /* IMPORTANT: Any other callback function that needs to be registered has to happen between the window creation
      * and before the render loop */
 
-    // Shaders
-    // =========================================================
-    // Vertex Shader ----------------
-    unsigned int vertexShader; // Holds ID for vertex shader
-    vertexShader = glCreateShader(GL_VERTEX_SHADER); // Creates vertex behind the scenes and returns ID
-    glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr); // We pass the source code to the shader
-    glCompileShader(vertexShader); // Compile the shader
-
-    // Check if the shader compiled properly
-    int  success;
-    char infoLog[512]; // Var for error message, if any
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success); // Queues to check for compile status
-
-    if(!success) { // If failed to compile we load error message and display it
-        glGetShaderInfoLog(vertexShader, 512, nullptr, infoLog);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-
-    // Fragment shader -------------
-    unsigned int fragmentShader;
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
-    glCompileShader(fragmentShader);
-
-    // Check to see if it compiled properly
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success); // Reusing vars
-
-    if (!success) {
-        glGetShaderInfoLog(fragmentShader, 512, nullptr, infoLog);
-        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-
-    // Shader Program Object -------------
-    // All the smaller shaders linked into one large shader program.
-    unsigned int shaderProgram; // Will hold the ID for the shaderProgram
-    shaderProgram = glCreateProgram(); // Inits and returns ID
-
-    // Attach our shaders to the shader program
-    glAttachShader(shaderProgram, vertexShader); // Adds vertex shader
-    glAttachShader(shaderProgram, fragmentShader); // Adds fragment shader
-    glLinkProgram(shaderProgram); // Links all shaders together
-
-    // NOTE: We don't need to provide the other shaders as there are default versions of those
-
-    // Check for successful linking of shader program
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if(!success) {
-        glGetProgramInfoLog(shaderProgram, 512, nullptr, infoLog);
-        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-    }
-
-    // Set up the program and delete shaders since we don't need them anymore
-    glUseProgram(shaderProgram); // Set the program
-    glDeleteShader(vertexShader); // Delete vertex shader
-    glDeleteShader(fragmentShader); // Delete fragment shader
-
     // Vertex Data For Object
     // =========================================================
 //    float vertices[] = { // This are the 3D coordinates for a triangle in NDC (Normalized Device Coordinates -1 to 1)
@@ -139,16 +67,15 @@ int main() {
 //            0.0f,  0.5f, 0.0f   //x3, y3, z3
 //    };
 
-    float vertices[] = { // This draws a rectangle and we reuse vertices!
-            0.5f,  0.5f, 0.0f,    // x1, y1, z1    [0]
-            0.5f, -0.5f, 0.0f,    // x2, y2, z2    [1]
-            -0.5f, -0.5f, 0.0f,   // x3, y3, z3    [2]
-            -0.5f,  0.5f, 0.0f    // x4, y4, z4    [3]
+    float vertices[] = {
+            // positions         // colors
+            0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,   // bottom right
+            -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,   // bottom left
+            0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f    // top
     };
 
-    unsigned int indices[] = {  // Here we tell OpenGL in what order we want the vertices to be drawn
-            0, 1, 3,   // First triangle uses this order
-            1, 2, 3    // Second one uses this order
+    int indices[] = {
+            0,1,2
     };
 
     // This creates a vertex buffer object
@@ -176,15 +103,18 @@ int main() {
     // Fourth is a setting that clamps values between -1 and 1 or 0 and 1 for unsigned.
     // Fifth: Stride, the length between each distinct value (x i i x i i x i i) <- for that it would be 3
     // Sixth: Starting offset for the value (i i x) <- offset would be 2 as it starts later
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0); // Set interpretation of VBO
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0); // Set interpretation of VBO
     glEnableVertexAttribArray(0); // Enables the attribute number (Defined in the vertex shader as (location=0)
+
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3*sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     // Render Loop
     // =========================================================
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // Set wireframe mode
 
-    Shader basic("/Users/alessandro/Desktop/Coding/C++/LearnOpenGL/OpenGL/resources/shaders/Default.shader");
-    basic.use();
+    Shader basicShader("/Users/alessandro/Desktop/Coding/C++/LearnOpenGL/OpenGL/resources/shaders/Default.shader");
+    basicShader.use();
 
     while(!glfwWindowShouldClose(window)) // Checks if the window has been instructed to close, if true loop terminates.
     {
@@ -192,11 +122,12 @@ int main() {
         processInput(window);
 
         // Render commands ...
-        glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // Paints it red
+        glClearColor(0.27f, 0.27f, 0.27f, 1.0f); // Paints it red
         glClear(GL_COLOR_BUFFER_BIT);
 
-//        glUseProgram(shaderProgram);
-        basic.use();
+        basicShader.use();
+        basicShader.setUniformFloat("dx", cos((float)glfwGetTime())/4);
+        basicShader.setUniformFloat("dy", sin((float)glfwGetTime())/4);
         glBindVertexArray(VAO);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -210,7 +141,6 @@ int main() {
     // =========================================================
     glDeleteBuffers(1, &VBO);
     glDeleteVertexArrays(1, &VAO);
-    glDeleteProgram(shaderProgram);
 
     //Once loop is done we want to properly terminate and remove resources (clean memory and shit).
     glfwTerminate(); // This function does exactly that ^^^
