@@ -1,7 +1,10 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include "math.h"
 #include "primitives/Shader.h"
+
+#define SCREEN_RES_MULTIPLIER 1
 
 // Window width and height
 const int windowWidth = 800;
@@ -29,7 +32,11 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); // We are setting major version to 3 (GLFW 3.0)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3); // Setting minor version to 3 (so now GLFW 3.3)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // Applying core profile for more functionality
+
+#ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // MacOS necessary line.
+#define SCREEN_RES_MULTIPLIER 2
+#endif
 
     // Create the window object
     GLFWwindow* window = glfwCreateWindow(windowWidth,windowHeight,"My Window",nullptr,nullptr);
@@ -51,7 +58,7 @@ int main() {
 
     // Set actual viewport dimension
     // Takes 4 parameters, left-x, bottom-y, right-x, top-y. y=0,x=0 is the bottom left corner of the viewport.
-    glViewport(0, 0, windowWidth*2, windowHeight*2); // Used for mapping from -1 to 1 to the actual render size.
+    glViewport(0, 0, windowWidth*SCREEN_RES_MULTIPLIER, windowHeight*SCREEN_RES_MULTIPLIER); // Used for mapping from -1 to 1 to the actual render size.
 
     // Tell GLFW that we have a viewportResize callback function, in case the event occurs it can resize it.
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -113,7 +120,7 @@ int main() {
     // =========================================================
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // Set wireframe mode
 
-    Shader basicShader("/Users/alessandro/Desktop/Coding/C++/LearnOpenGL/OpenGL/resources/shaders/Default.shader");
+    Shader basicShader("../../OpenGL/resources/shaders/Default.shader");
     basicShader.use();
 
     while(!glfwWindowShouldClose(window)) // Checks if the window has been instructed to close, if true loop terminates.
