@@ -3,6 +3,8 @@
 #include <iostream>
 #include "math.h"
 #include "primitives/Shader.h"
+#include "stb_image/stb_image.h"
+
 
 #define SCREEN_RES_MULTIPLIER 1
 
@@ -35,11 +37,12 @@ int main() {
 
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // MacOS necessary line.
+#undef SCREEN_RES_MULTIPLIER
 #define SCREEN_RES_MULTIPLIER 2
 #endif
 
     // Create the window object
-    GLFWwindow* window = glfwCreateWindow(windowWidth,windowHeight,"My Window",nullptr,nullptr);
+    GLFWwindow* window = glfwCreateWindow(windowWidth,windowHeight,"Psuedo Window",nullptr,nullptr);
     if (window == nullptr) { // If init fails terminate glfw and finish program with exit code -1
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
@@ -75,14 +78,16 @@ int main() {
 //    };
 
     float vertices[] = {
-            // positions         // colors
-            0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,   // bottom right
-            -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,   // bottom left
-            0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f    // top
+            // positions          // colors           // texture coords
+            0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
+            0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
+            -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
+            -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left
     };
 
     int indices[] = {
-            0,1,2
+            0, 1, 3, // first triangle
+            1, 2, 3
     };
 
     // This creates a vertex buffer object
@@ -110,11 +115,45 @@ int main() {
     // Fourth is a setting that clamps values between -1 and 1 or 0 and 1 for unsigned.
     // Fifth: Stride, the length between each distinct value (x i i x i i x i i) <- for that it would be 3
     // Sixth: Starting offset for the value (i i x) <- offset would be 2 as it starts later
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0); // Set interpretation of VBO
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0); // Set interpretation of VBO
     glEnableVertexAttribArray(0); // Enables the attribute number (Defined in the vertex shader as (location=0)
 
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3*sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3*sizeof(float)));
     glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6*sizeof(float)));
+    glEnableVertexAttribArray(2);
+
+    // Loading an Image
+    // =========================================================
+    // Read image data using stb library
+    int imgWidth, imgHeight, nChannels;
+    stbi_set_flip_vertically_on_load(true);
+    unsigned char* data = stbi_load("../../OpenGL/resources/images/PseudoElephant.png", &imgWidth, &imgHeight, &nChannels, 0);
+
+    // Create texture with opengl, store its ID
+    unsigned int texture;
+    glGenTextures(1, &texture);
+
+    // Bind the texture
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    // set the texture wrapping/filtering options (on the currently bound texture object)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    if (data) { // Error check
+        // Generate the texture using the data
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imgWidth, imgHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    } else {
+        std::cout << "Failed to load texture" << std::endl;
+    }
+
+    // Free image data from the stb library
+    stbi_image_free(data);
 
     // Render Loop
     // =========================================================
@@ -133,8 +172,7 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);
 
         basicShader.use();
-        basicShader.setUniformFloat("dx", cos((float)glfwGetTime())/4);
-        basicShader.setUniformFloat("dy", sin((float)glfwGetTime())/4);
+        glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(VAO);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
